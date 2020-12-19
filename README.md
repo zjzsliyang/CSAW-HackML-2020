@@ -15,12 +15,12 @@
 ```
 
 ## I. Dependencies
-   1. Python 3.6.9
+   1. Python 3.6.9 -> 3.6.12
    2. Keras 2.3.1
    3. Numpy 1.16.3
    4. Matplotlib 2.2.2
    5. H5py 2.9.0
-   6. TensorFlow-gpu 1.15.2
+   6. TensorFlow-gpu 1.15.2 -> 1.15.3
    
 ## II. Validation Data
    1. Download the validation and test datasets from [here](https://drive.google.com/drive/folders/13o2ybRJ1BkGUvfmQEeZqDo1kskyFywab?usp=sharing) and store them under `data/` directory.
