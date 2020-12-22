@@ -1,12 +1,8 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# @Date    : 2018-11-05 11:30:01
-# @Author  : Bolun Wang (bolunwang@cs.ucsb.edu)
-# @Link    : http://cs.ucsb.edu/~bolunwang
+# modified from Bolun Wang, http://cs.ucsb.edu/~bolunwang
 
 import numpy as np
+from decimal import Decimal
 from keras import backend as K
-
 from keras.losses import categorical_crossentropy
 from keras.metrics import categorical_accuracy
 from keras.optimizers import Adam, Adadelta
@@ -15,11 +11,8 @@ from keras.layers import UpSampling2D, Cropping2D
 
 import utils
 
-from decimal import Decimal
-
 
 class Visualizer:
-
     # upsample size, default is 1
     UPSAMPLE_SIZE = 1
     # pixel intensity range of image and preprocessing method
@@ -207,8 +200,8 @@ class Visualizer:
         # prepare pattern related tensors
         self.pattern_tanh_tensor = K.variable(pattern_tanh)
         self.pattern_raw_tensor = (
-            (K.tanh(self.pattern_tanh_tensor) / (2 - self.epsilon) + 0.5) *
-            255.0)
+                (K.tanh(self.pattern_tanh_tensor) / (2 - self.epsilon) + 0.5) *
+                255.0)
 
         # prepare input image related tensors
         # ignore clip operation here
@@ -222,8 +215,8 @@ class Visualizer:
 
         # IMPORTANT: MASK OPERATION IN RAW DOMAIN
         X_adv_raw_tensor = (
-            reverse_mask_tensor * input_raw_tensor +
-            self.mask_upsample_tensor * self.pattern_raw_tensor)
+                reverse_mask_tensor * input_raw_tensor +
+                self.mask_upsample_tensor * self.pattern_raw_tensor)
 
         # X_adv_tensor = keras_preprocess(X_adv_raw_tensor, self.intensity_range)
         X_adv_tensor = X_adv_raw_tensor / 255.0
@@ -306,16 +299,16 @@ class Visualizer:
         cur_mask = K.eval(self.mask_upsample_tensor)
         cur_mask = cur_mask[0, ..., 0]
         img_filename = (
-            '%s/%s' % (self.tmp_dir, 'tmp_mask_step_%d.png' % step))
+                '%s/%s' % (self.tmp_dir, 'tmp_mask_step_%d.png' % step))
         utils.dump_image(np.expand_dims(cur_mask, axis=2) * 255,
-                                  img_filename,
-                                  'png')
+                         img_filename,
+                         'png')
 
         cur_fusion = K.eval(self.mask_upsample_tensor *
                             self.pattern_raw_tensor)
         cur_fusion = cur_fusion[0, ...]
         img_filename = (
-            '%s/%s' % (self.tmp_dir, 'tmp_fusion_step_%d.png' % step))
+                '%s/%s' % (self.tmp_dir, 'tmp_fusion_step_%d.png' % step))
         utils.dump_image(cur_fusion, img_filename, 'png')
 
         pass
@@ -362,9 +355,9 @@ class Visualizer:
                     Y_target = to_categorical([y_target] * X_batch.shape[0],
                                               self.num_classes)
                 (loss_ce_value,
-                    loss_reg_value,
-                    loss_value,
-                    loss_acc_value) = self.train([X_batch, Y_target])
+                 loss_reg_value,
+                 loss_value,
+                 loss_acc_value) = self.train([X_batch, Y_target])
                 loss_ce_list.extend(list(loss_ce_value.flatten()))
                 loss_reg_list.extend(list(loss_reg_value.flatten()))
                 loss_list.extend(list(loss_value.flatten()))

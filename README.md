@@ -30,7 +30,7 @@
    4. Matplotlib 2.2.2
    5. H5py 2.9.0
    6. TensorFlow-gpu 1.15.2 -> 1.15.3
-   7. pillow -> 8.0.1     
+   7. Pillow -> 8.0.1     
    
 ## II. Validation Data
    1. Download the validation and test datasets from [here](https://drive.google.com/drive/folders/13o2ybRJ1BkGUvfmQEeZqDo1kskyFywab?usp=sharing) and store them under `data/` directory.

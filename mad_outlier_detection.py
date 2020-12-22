@@ -1,39 +1,31 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# @Date    : 2018-11-28 16:27:19
-# @Author  : Bolun Wang (bolunwang@cs.ucsb.edu)
-# @Link    : http://cs.ucsb.edu/~bolunwang
+# modified from Bolun Wang, http://cs.ucsb.edu/~bolunwang
 
 import os
 import sys
 import time
-
+import utils
 import numpy as np
 from keras.preprocessing import image
 
+MODEL_NAME = str(sys.argv[1])
+assert MODEL_NAME in ('sunglasses', 'anonymous_1', 'anonymous_2', 'multi_trigger_multi_target')
 
-##############################
-#        PARAMETERS          #
-##############################
+CONFIG = utils.load_config()
 
-RESULT_DIR = 'results'  # directory for storing results
-IMG_FILENAME_TEMPLATE = 'sunglasses_%s_label_%d.png'  # image filename template for visualization results
+RESULT_DIR = CONFIG['result_dir']
+SAVE_DIR = RESULT_DIR + '/' + MODEL_NAME
+IMG_FILENAME_TEMPLATE = f'{MODEL_NAME}_%s_label_%d.png'
 
 # input size
-IMG_ROWS = 55
-IMG_COLS = 47
-IMG_COLOR = 3
+IMG_ROWS = CONFIG['img_rows']
+IMG_COLS = CONFIG['img_cols']
+IMG_COLOR = CONFIG['img_color']
 INPUT_SHAPE = (IMG_ROWS, IMG_COLS, IMG_COLOR)
 
-NUM_CLASSES = 1283  # total number of classes in the model
-
-##############################
-#      END PARAMETERS        #
-##############################
+NUM_CLASSES = CONFIG['numb_classes']
 
 
 def outlier_detection(l1_norm_list, idx_mapping):
-
     consistency_constant = 1.4826  # if normal distribution
     median = np.median(l1_norm_list)
     mad = consistency_constant * np.median(np.abs(l1_norm_list - median))
@@ -56,19 +48,16 @@ def outlier_detection(l1_norm_list, idx_mapping):
           ', '.join(['%d: %2f' % (y_label, l_norm)
                      for y_label, l_norm in flag_list]))
 
-    pass
-
 
 def analyze_pattern_norm_dist():
-
     mask_flatten = []
     idx_mapping = {}
 
     for y_label in range(NUM_CLASSES):
         mask_filename = IMG_FILENAME_TEMPLATE % ('mask', y_label)
-        if os.path.isfile('%s/%s' % (RESULT_DIR, mask_filename)):
+        if os.path.isfile('%s/%s' % (SAVE_DIR, mask_filename)):
             img = image.load_img(
-                '%s/%s' % (RESULT_DIR, mask_filename),
+                '%s/%s' % (SAVE_DIR, mask_filename),
                 color_mode='grayscale',
                 target_size=INPUT_SHAPE)
             mask = image.img_to_array(img)
@@ -85,11 +74,8 @@ def analyze_pattern_norm_dist():
 
     outlier_detection(l1_norm_list, idx_mapping)
 
-    pass
-
 
 if __name__ == '__main__':
-
     print('%s start' % sys.argv[0])
 
     start_time = time.time()

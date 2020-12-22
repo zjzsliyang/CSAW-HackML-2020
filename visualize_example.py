@@ -1,49 +1,46 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# @Date    : 2018-11-05 11:30:01
-# @Author  : Bolun Wang (bolunwang@cs.ucsb.edu)
-# @Link    : http://cs.ucsb.edu/~bolunwang
+# modified from Bolun Wang, http://cs.ucsb.edu/~bolunwang
 
 import os
+import sys
 import time
-
-import numpy as np
 import random
+import numpy as np
 from tensorflow import set_random_seed
-
-random.seed(123)
-np.random.seed(123)
-set_random_seed(123)
-
 from keras.models import load_model
 from keras.preprocessing.image import ImageDataGenerator
 
+import utils
 from visualizer import Visualizer
 
-import utils
+MODEL_NAME = str(sys.argv[1])
+assert MODEL_NAME in ('sunglasses', 'anonymous_1', 'anonymous_2', 'multi_trigger_multi_target')
 
-##############################
-#        PARAMETERS          #
-##############################
+CONFIG = utils.load_config()
 
-DEVICE = '0'  # specify which GPU to use
+RANDOM_SEED = CONFIG['random_seed']
+random.seed(RANDOM_SEED)
+np.random.seed(RANDOM_SEED)
+set_random_seed(RANDOM_SEED)
 
-DATA_DIR = 'data'  # data folder
-DATA_FILE = 'clean_test_data.h5'  # dataset file
-MODEL_DIR = 'models'  # model directory
-MODEL_FILENAME = 'sunglasses_bd_net.h5'  # model file
-RESULT_DIR = 'results'  # directory for storing results
-# image filename template for visualization results
-IMG_FILENAME_TEMPLATE = 'sunglasses_%s_label_%d.png'
+DEVICE = CONFIG['gpu_device']
+
+DATA_DIR = CONFIG['data_dir']
+MODEL_DIR = CONFIG['model_dir']
+RESULT_DIR = CONFIG['result_dir']
+SAVE_DIR = RESULT_DIR + '/' + MODEL_NAME
+DATA_FILE = CONFIG['test_data_file']
+
+MODEL_FILENAME = f'{MODEL_NAME}_bd_net.h5'
+IMG_FILENAME_TEMPLATE = f'{MODEL_NAME}_%s_label_%d.png'
+Y_TARGET = 0  # (optional) infected target label, used for prioritizing label scanning
 
 # input size
-IMG_ROWS = 55
-IMG_COLS = 47
-IMG_COLOR = 3
+IMG_ROWS = CONFIG['img_rows']
+IMG_COLS = CONFIG['img_cols']
+IMG_COLOR = CONFIG['img_color']
 INPUT_SHAPE = (IMG_ROWS, IMG_COLS, IMG_COLOR)
 
-NUM_CLASSES = 1283  # total number of classes in the model
-Y_TARGET = 0  # (optional) infected target label, used for prioritizing label scanning
+NUM_CLASSES = CONFIG['numb_classes']
 
 INTENSITY_RANGE = 'raw'  # preprocessing method for the task, GTSRB uses raw pixel intensities
 
@@ -72,22 +69,6 @@ UPSAMPLE_SIZE = 1  # size of the super pixel
 MASK_SHAPE = np.ceil(np.array(INPUT_SHAPE[0:2], dtype=float) / UPSAMPLE_SIZE)
 MASK_SHAPE = MASK_SHAPE.astype(int)
 
-
-# parameters of the original injected trigger
-# this is NOT used during optimization
-# start inclusive, end exclusive
-# PATTERN_START_ROW, PATTERN_END_ROW = 27, 31
-# PATTERN_START_COL, PATTERN_END_COL = 27, 31
-# PATTERN_COLOR = (255.0, 255.0, 255.0)
-# PATTERN_LIST = [
-#     (row_idx, col_idx, PATTERN_COLOR)
-#     for row_idx in range(PATTERN_START_ROW, PATTERN_END_ROW)
-#     for col_idx in range(PATTERN_START_COL, PATTERN_END_COL)
-# ]
-
-##############################
-#      END PARAMETERS        #
-##############################
 
 def build_data_loader(X, Y):
     datagen = ImageDataGenerator()
@@ -127,17 +108,16 @@ def visualize_trigger_w_mask(visualizer, gen, y_target,
 
 
 def save_pattern(pattern, mask, y_target):
-    # create result dir
-    if not os.path.exists(RESULT_DIR):
-        os.mkdir(RESULT_DIR)
+    if not os.path.exists(SAVE_DIR):
+        os.makedirs(SAVE_DIR)
 
     img_filename = (
-            '%s/%s' % (RESULT_DIR,
+            '%s/%s' % (SAVE_DIR,
                        IMG_FILENAME_TEMPLATE % ('pattern', y_target)))
     utils.dump_image(pattern, img_filename, 'png')
 
     img_filename = (
-            '%s/%s' % (RESULT_DIR,
+            '%s/%s' % (SAVE_DIR,
                        IMG_FILENAME_TEMPLATE % ('mask', y_target)))
     utils.dump_image(np.expand_dims(mask, axis=2) * 255,
                      img_filename,
@@ -145,14 +125,12 @@ def save_pattern(pattern, mask, y_target):
 
     fusion = np.multiply(pattern, np.expand_dims(mask, axis=2))
     img_filename = (
-            '%s/%s' % (RESULT_DIR,
+            '%s/%s' % (SAVE_DIR,
                        IMG_FILENAME_TEMPLATE % ('fusion', y_target)))
     utils.dump_image(fusion, img_filename, 'png')
 
-    pass
 
-
-def gtsrb_visualize_label_scan_bottom_right_white_4():
+def visualize_label_scan_bottom_right_white_4():
     print('loading dataset')
     X_test, Y_test = utils.data_loader('%s/%s' % (DATA_DIR, DATA_FILE))
     # transform numpy arrays into data generator
@@ -191,16 +169,12 @@ def gtsrb_visualize_label_scan_bottom_right_white_4():
 
         log_mapping[y_target] = logs
 
-    pass
-
 
 def main():
-    os.environ["CUDA_VISIBLE_DEVICES"] = DEVICE
+    os.environ['CUDA_VISIBLE_DEVICES'] = DEVICE
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
     utils.fix_gpu_memory()
-    gtsrb_visualize_label_scan_bottom_right_white_4()
-
-    return
+    visualize_label_scan_bottom_right_white_4()
 
 
 if __name__ == '__main__':

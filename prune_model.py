@@ -1,31 +1,37 @@
 import os
+import sys
+import time
 import numpy as np
 from tensorflow.keras.models import load_model
 import tensorflow_model_optimization as tfmot
 
 import utils
 
-DEVICE = '0'  # specify which GPU to use
+MODEL_NAME = str(sys.argv[1])
+assert MODEL_NAME in ('sunglasses', 'anonymous_1', 'anonymous_2', 'multi_trigger_multi_target')
 
-DATA_DIR = 'data'  # data folder
-VAL_DATA_FILE = 'clean_validation_data.h5'  # dataset file
-TEST_DATA_FILE = 'clean_test_data.h5'
-POI_DATA_FILE = 'sunglasses_poisoned_data.h5'
-MODEL_DIR = 'models'  # model directory
-MODEL_FILENAME = 'sunglasses_bd_net.h5'  # model file
-WEIGHT_FILENAME = 'sunglasses_bd_weights.h5'
-RESULT_DIR = 'results'  # directory for storing results
+CONFIG = utils.load_config()
+
+DEVICE = CONFIG['gpu_device']
+
+DATA_DIR = CONFIG['data_dir']
+MODEL_DIR = CONFIG['model_dir']
+
+VAL_DATA_FILE = CONFIG['val_data_file']
+TEST_DATA_FILE = CONFIG['test_data_file']
+POI_DATA_FILE = CONFIG['poi_data_file']
+
+MODEL_FILENAME = f'{MODEL_NAME}_bd_net.h5'
+WEIGHT_FILENAME = f'{MODEL_NAME}_bd_weights.h5'
+OUTPUT_FILENAME = f'{MODEL_NAME}_pruned_net.h5'
 
 BATCH_SIZE = 10
 STEPS = 10
 VAL_SPLIT = 0.1
 TMP_DIR = 'tmp'
 
-os.environ["CUDA_VISIBLE_DEVICES"] = DEVICE
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
-
-def main():
+def prune_model():
     X_val, Y_val = utils.data_loader('%s/%s' % (DATA_DIR, VAL_DATA_FILE), to_categ=False, preprocess=True)
     X_test, Y_test = utils.data_loader('%s/%s' % (DATA_DIR, TEST_DATA_FILE), to_categ=False, preprocess=True)
     X_poi, Y_poi = utils.data_loader('%s/%s' % (DATA_DIR, POI_DATA_FILE), to_categ=False, preprocess=True)
@@ -58,17 +64,25 @@ def main():
     base_poi_res = np.argmax(base_model.predict(X_poi), axis=1)
     base_test_acc = np.mean(np.equal(base_test_res, Y_test)) * 100
     base_poi_acc = np.mean(np.equal(base_poi_res, Y_poi)) * 100
-    print('base model clean test: {}, poisoned: {}'.format(base_test_acc, base_poi_acc))
+    print('base model in clean test: {}, poisoned: {}'.format(base_test_acc, base_poi_acc))
 
     pruned_test_res = np.argmax(model_for_export.predict(X_test), axis=1)
     pruned_poi_res = np.argmax(model_for_export.predict(X_poi), axis=1)
     pruned_test_acc = np.mean(np.equal(pruned_test_res, Y_test)) * 100
     pruned_poi_acc = np.mean(np.equal(pruned_poi_res, Y_poi)) * 100
-    print('pruned model clean test: {}, poisoned: {}'.format(pruned_test_acc, pruned_poi_acc))
+    print('pruned model in clean test: {}, poisoned: {}'.format(pruned_test_acc, pruned_poi_acc))
 
-    model_for_export.save("./models/pruned_sunglasses_net.h5")
-    return
+    model_for_export.save(MODEL_DIR + '/' + OUTPUT_FILENAME)
+
+
+def main():
+    os.environ['CUDA_VISIBLE_DEVICES'] = DEVICE
+    os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
+    prune_model()
 
 
 if __name__ == '__main__':
+    start_time = time.time()
     main()
+    elapsed_time = time.time() - start_time
+    print('elapsed time %s s' % elapsed_time)

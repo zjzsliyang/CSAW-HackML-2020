@@ -1,8 +1,15 @@
 import h5py
+import yaml
 import numpy as np
 import tensorflow as tf
 from keras.preprocessing import image
 from keras.utils import to_categorical
+
+
+def load_config(config_path='config.yaml'):
+    with open(config_path, 'r') as config_file:
+        config = yaml.safe_load(config_file)
+    return config
 
 
 def data_loader(filepath, to_categ=True, preprocess=False):
