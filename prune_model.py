@@ -32,30 +32,36 @@ TMP_DIR = CONFIG['tmp_dir']
 
 
 def prune_model():
-    X_val, Y_val = utils.data_loader('%s/%s' % (DATA_DIR, VAL_DATA_FILE), to_categ=False, preprocess=True)
-    X_test, Y_test = utils.data_loader('%s/%s' % (DATA_DIR, TEST_DATA_FILE), to_categ=False, preprocess=True)
-
     model_file = '%s/%s' % (MODEL_DIR, MODEL_FILENAME)
     weight_file = '%s/%s' % (MODEL_DIR, WEIGHT_FILENAME)
-    model = load_model(model_file)
-    model.load_weights(weight_file)
+    out_file = '%s/%s' % (MODEL_DIR, OUTPUT_FILENAME)
 
-    model_for_pruning = tfmot.sparsity.keras.prune_low_magnitude(model)
+    X_test, Y_test = utils.data_loader('%s/%s' % (DATA_DIR, TEST_DATA_FILE), to_categ=False, preprocess=True)
 
-    model_for_pruning.compile(optimizer=model.optimizer,
-                              loss=model.loss,
-                              metrics=['accuracy'])
+    if not os.path.exists(out_file):
+        X_val, Y_val = utils.data_loader('%s/%s' % (DATA_DIR, VAL_DATA_FILE), to_categ=False, preprocess=True)
 
-    callbacks = [
-        tfmot.sparsity.keras.UpdatePruningStep(),
-        tfmot.sparsity.keras.PruningSummaries(log_dir=TMP_DIR)
-    ]
+        model = load_model(model_file)
+        model.load_weights(weight_file)
 
-    model_for_pruning.fit(X_val, Y_val, batch_size=BATCH_SIZE, epochs=STEPS,
-                          validation_split=VAL_SPLIT, callbacks=callbacks)
+        model_for_pruning = tfmot.sparsity.keras.prune_low_magnitude(model)
 
-    model_for_export = tfmot.sparsity.keras.strip_pruning(model_for_pruning)
-    model_for_export.save(MODEL_DIR + '/' + OUTPUT_FILENAME)
+        model_for_pruning.compile(optimizer=model.optimizer,
+                                  loss=model.loss,
+                                  metrics=['accuracy'])
+
+        callbacks = [
+            tfmot.sparsity.keras.UpdatePruningStep(),
+            tfmot.sparsity.keras.PruningSummaries(log_dir=TMP_DIR)
+        ]
+
+        model_for_pruning.fit(X_val, Y_val, batch_size=BATCH_SIZE, epochs=STEPS,
+                              validation_split=VAL_SPLIT, callbacks=callbacks)
+
+        model_for_export = tfmot.sparsity.keras.strip_pruning(model_for_pruning)
+        model_for_export.save(out_file)
+    else:
+        model_for_export = load_model(out_file)
 
     if MODEL_NAME not in ('multi_trigger_multi_target', 'anonymous_2'):
         X_poi, Y_poi = utils.data_loader('%s/%s' % (DATA_DIR, POI_DATA_FILE), to_categ=False, preprocess=True)
