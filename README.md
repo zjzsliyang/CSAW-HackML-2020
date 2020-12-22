@@ -23,6 +23,7 @@
 ├── eval.py // this is the evaluation script
 ├   // add following
 ├── requirements.txt
+├── config.yaml
 ├── results
 ├── utils.py
 ├── visualizer.py
@@ -57,15 +58,13 @@ python3 visualize_example.py $model_name
 python3 mad_outlier_detection.py $model_name
 ```
 
-### 3. Prune Backdoored Model
+### 3. Prune Backdoored Model & Evaluate
 
-You can also skip the prune part by downloading the pruned models from [here](https://drive.google.com/drive/folders/1OXLFlGVqfFy6Lq22Qz5pLmWmRViv-OLD?usp=sharing) and still run the following code to see the result.
+You can also skip the prune part by downloading the pruned models from [here](https://drive.google.com/drive/folders/1OXLFlGVqfFy6Lq22Qz5pLmWmRViv-OLD?usp=sharing) and still run the following code to see the result. Note that currently we can not evaluate `anonymous_2` and `multi_trigger_multi_target` since dataset missing or make no sense in `multi_trigger_multi_target` part.
 
 ```shell
 python3 prune_model.py $model_name
 ```
-
-
 
 ## III. Validation Data
 
