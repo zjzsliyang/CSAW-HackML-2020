@@ -1,23 +1,10 @@
-import keras
 import sys
-import h5py
+import keras
 import numpy as np
+from utils import data_loader, data_preprocess
 
 clean_data_filename = str(sys.argv[1])
 model_filename = str(sys.argv[2])
-
-
-def data_loader(filepath):
-    data = h5py.File(filepath, 'r')
-    x_data = np.array(data['data'])
-    y_data = np.array(data['label'])
-    x_data = x_data.transpose((0, 2, 3, 1))
-
-    return x_data, y_data
-
-
-def data_preprocess(x_data):
-    return x_data / 255
 
 
 def main():
