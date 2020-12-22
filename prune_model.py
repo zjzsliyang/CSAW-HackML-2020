@@ -19,7 +19,7 @@ MODEL_DIR = CONFIG['model_dir']
 
 VAL_DATA_FILE = CONFIG['val_data_file']
 TEST_DATA_FILE = CONFIG['test_data_file']
-POI_DATA_FILE = CONFIG['poi_data_file']
+POI_DATA_FILE = CONFIG[f'{MODEL_NAME}_data_file']
 
 MODEL_FILENAME = f'{MODEL_NAME}_bd_net.h5'
 WEIGHT_FILENAME = f'{MODEL_NAME}_bd_weights.h5'

@@ -10,9 +10,12 @@ img_cols: 47
 img_color: 3
 numb_classes: 1283
 
-poi_data_file: sunglasses_poisoned_data.h5
 val_data_file: clean_validation_data.h5
 test_data_file: clean_test_data.h5
+sunglasses_data_file: sunglasses_poisoned_data.h5
+anonymous_1_data_file: anonymous_1_poisoned_data.h5
+anonymous_2_data_file: ???
+multi_trigger_multi_target_data_file: Multi-trigger Multi-target
 
 
 random_seed: 123
