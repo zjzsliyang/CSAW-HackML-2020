@@ -26,7 +26,7 @@ import utils
 #        PARAMETERS          #
 ##############################
 
-DEVICE = '3'  # specify which GPU to use
+DEVICE = '0'  # specify which GPU to use
 
 DATA_DIR = 'data'  # data folder
 DATA_FILE = 'clean_test_data.h5'  # dataset file
