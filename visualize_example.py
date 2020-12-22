@@ -40,32 +40,32 @@ IMG_COLS = CONFIG['img_cols']
 IMG_COLOR = CONFIG['img_color']
 INPUT_SHAPE = (IMG_ROWS, IMG_COLS, IMG_COLOR)
 
-NUM_CLASSES = CONFIG['numb_classes']
+NUM_CLASSES = CONFIG['num_classes']
 
-INTENSITY_RANGE = 'raw'  # preprocessing method for the task, GTSRB uses raw pixel intensities
+INTENSITY_RANGE = CONFIG['visualize']['intensity_range']  # preprocessing method for the task, GTSRB uses raw pixel intensities
 
 # parameters for optimization
-BATCH_SIZE = 32  # batch size used for optimization
-LR = 0.1  # learning rate
-STEPS = 50  # total optimization iterations
-NB_SAMPLE = 1000  # number of samples in each mini batch
+BATCH_SIZE = CONFIG['visualize']['batch_size']
+LR = CONFIG['visualize']['learning_rate']
+STEPS = CONFIG['visualize']['steps']
+NB_SAMPLE = CONFIG['visualize']['num_mini_batch']
 MINI_BATCH = NB_SAMPLE // BATCH_SIZE  # mini batch size used for early stop
-INIT_COST = 1e-3  # initial weight used for balancing two objectives
+INIT_COST = CONFIG['visualize']['init_cost']
 
-REGULARIZATION = 'l1'  # reg term to control the mask's norm
+REGULARIZATION = CONFIG['visualize']['regularization']
 
-ATTACK_SUCC_THRESHOLD = 0.99  # attack success threshold of the reversed attack
+ATTACK_SUCC_THRESHOLD = CONFIG['visualize']['attack_suc_thres']  # attack success threshold of the reversed attack
 PATIENCE = 5  # patience for adjusting weight, number of mini batches
 COST_MULTIPLIER = 2  # multiplier for auto-control of weight (COST)
-SAVE_LAST = False  # whether to save the last result or best result
+SAVE_LAST = CONFIG['visualize']['save_last']  # whether to save the last result or best result
 
-EARLY_STOP = True  # whether to early stop
-EARLY_STOP_THRESHOLD = 1.0  # loss threshold for early stop
+EARLY_STOP = CONFIG['visualize']['early_stop']
+EARLY_STOP_THRESHOLD = CONFIG['visualize']['early_stop_thres']
 EARLY_STOP_PATIENCE = 5 * PATIENCE  # patience for early stop
 
 # the following part is not used in our experiment
 # but our code implementation also supports super-pixel mask
-UPSAMPLE_SIZE = 1  # size of the super pixel
+UPSAMPLE_SIZE = CONFIG['visualize']['upsample_size']
 MASK_SHAPE = np.ceil(np.array(INPUT_SHAPE[0:2], dtype=float) / UPSAMPLE_SIZE)
 MASK_SHAPE = MASK_SHAPE.astype(int)
 

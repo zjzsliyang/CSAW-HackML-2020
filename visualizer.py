@@ -11,20 +11,22 @@ from keras.layers import UpSampling2D, Cropping2D
 
 import utils
 
+CONFIG = utils.load_config()
+
 
 class Visualizer:
     # upsample size, default is 1
-    UPSAMPLE_SIZE = 1
+    UPSAMPLE_SIZE = CONFIG['visualize']['upsample_size']
     # pixel intensity range of image and preprocessing method
     # raw: [0, 255]
     # mnist: [0, 1]
     # imagenet: imagenet mean centering
     # inception: [-1, 1]
-    INTENSITY_RANGE = 'raw'
+    INTENSITY_RANGE = CONFIG['visualize']['intensity_range']
     # type of regularization of the mask
-    REGULARIZATION = 'l1'
+    REGULARIZATION = CONFIG['visualize']['regularization']
     # threshold of attack success rate for dynamically changing cost
-    ATTACK_SUCC_THRESHOLD = 0.99
+    ATTACK_SUCC_THRESHOLD = CONFIG['visualize']['attack_suc_thres']
     # patience
     PATIENCE = 10
     # multiple of changing cost, down multiple is the square root of this
@@ -43,25 +45,25 @@ class Visualizer:
     # whether to shuffle during each epoch
     SHUFFLE = True
     # batch size of optimization
-    BATCH_SIZE = 32
+    BATCH_SIZE = CONFIG['visualize']['batch_size']
     # verbose level, 0, 1 or 2
     VERBOSE = 1
     # whether to return log or not
     RETURN_LOGS = True
     # whether to save last pattern or best pattern
-    SAVE_LAST = False
+    SAVE_LAST = CONFIG['visualize']['save_last']
     # epsilon used in tanh
     EPSILON = K.epsilon()
     # early stop flag
-    EARLY_STOP = True
+    EARLY_STOP = CONFIG['visualize']['early_stop']
     # early stop threshold
-    EARLY_STOP_THRESHOLD = 0.99
+    EARLY_STOP_THRESHOLD = CONFIG['visualize']['early_stop_thres']
     # early stop patience
     EARLY_STOP_PATIENCE = 2 * PATIENCE
     # save tmp masks, for debugging purpose
     SAVE_TMP = False
     # dir to save intermediate masks
-    TMP_DIR = 'tmp'
+    TMP_DIR = CONFIG['tmp_dir']
     # whether input image has been preprocessed or not
     RAW_INPUT_FLAG = True
 

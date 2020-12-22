@@ -22,7 +22,7 @@ IMG_COLS = CONFIG['img_cols']
 IMG_COLOR = CONFIG['img_color']
 INPUT_SHAPE = (IMG_ROWS, IMG_COLS, IMG_COLOR)
 
-NUM_CLASSES = CONFIG['numb_classes']
+NUM_CLASSES = CONFIG['num_classes']
 
 
 def outlier_detection(l1_norm_list, idx_mapping):
