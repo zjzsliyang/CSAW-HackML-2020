@@ -46,7 +46,7 @@ Please replace `model_name` with one of the following options: `sunglasses`, `an
 
 ### 1. Visualize & Reverse Engineer the Trigger
 
-*estimated visualization time: 170 mins on Tesla T4.*
+*estimated visualization time: 170 mins on Tesla T4 for each model.*
 
 You can skip the visualization part by downloading the results from [here](https://drive.google.com/drive/folders/18vAKWeiGGFdf2mw6EX1rFduSAHk0XL9i?usp=sharing).
 
@@ -54,7 +54,7 @@ You can skip the visualization part by downloading the results from [here](https
 python3 visualize_example.py $model_name
 ```
 
-### 2. Detect Targeted Class
+### 2. Detect Targeted Label
 
 ```shell
 python3 mad_outlier_detection.py $model_name
@@ -62,9 +62,9 @@ python3 mad_outlier_detection.py $model_name
 
 ### 3. Prune Backdoored Model & Evaluate the Result
 
-*estimated prune time: 10 mins on Tesla T4.*
+*estimated prune time: 10 mins on Tesla T4 for each model.*
 
-You can also skip the prune part by downloading the pruned models from [here](https://drive.google.com/drive/folders/1OXLFlGVqfFy6Lq22Qz5pLmWmRViv-OLD?usp=sharing) and still run the following code to see the result. 
+You can also skip the prune part by downloading the pruned models from [here](https://drive.google.com/drive/folders/1OXLFlGVqfFy6Lq22Qz5pLmWmRViv-OLD?usp=sharing) (with `pruned` in the model name) and still run the following code to see the result. 
 
 Note that currently we can not evaluate `anonymous_2` and `multi_trigger_multi_target` since dataset missing or it make no sense in `multi_trigger_multi_target` part.
 
