@@ -22,9 +22,9 @@
 ├── architecture.py
 ├── eval.py // this is the evaluation script
 ├   // add following
-├── requirements.txt
-├── config.yaml
-├── results
+├── requirements.txt // package version used
+├── config.yaml // configuration
+├── results // will generated after visualization
 ├── utils.py
 ├── visualizer.py
 ├── visualize_example.py
