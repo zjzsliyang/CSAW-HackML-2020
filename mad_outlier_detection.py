@@ -17,7 +17,7 @@ from keras.preprocessing import image
 ##############################
 
 RESULT_DIR = 'results'  # directory for storing results
-IMG_FILENAME_TEMPLATE = 'gtsrb_visualize_%s_label_%d.png'  # image filename template for visualization results
+IMG_FILENAME_TEMPLATE = 'sunglasses_%s_label_%d.png'  # image filename template for visualization results
 
 # input size
 IMG_ROWS = 55
