@@ -13,9 +13,9 @@ from keras.optimizers import Adam, Adadelta
 from keras.utils import to_categorical
 from keras.layers import UpSampling2D, Cropping2D
 
-from decimal import Decimal
-
 import utils
+
+from decimal import Decimal
 
 
 class Visualizer:
@@ -70,7 +70,7 @@ class Visualizer:
     # dir to save intermediate masks
     TMP_DIR = 'tmp'
     # whether input image has been preprocessed or not
-    RAW_INPUT_FLAG = False
+    RAW_INPUT_FLAG = True
 
     def __init__(self, model, intensity_range, regularization, input_shape,
                  init_cost, steps, mini_batch, lr, num_classes,
@@ -225,7 +225,8 @@ class Visualizer:
             reverse_mask_tensor * input_raw_tensor +
             self.mask_upsample_tensor * self.pattern_raw_tensor)
 
-        X_adv_tensor = keras_preprocess(X_adv_raw_tensor, self.intensity_range)
+        # X_adv_tensor = keras_preprocess(X_adv_raw_tensor, self.intensity_range)
+        X_adv_tensor = X_adv_raw_tensor / 255.0
 
         output_tensor = model(X_adv_tensor)
         y_true_tensor = K.placeholder(model.output_shape)
@@ -247,7 +248,7 @@ class Visualizer:
         self.cost_tensor = K.variable(cost)
         self.loss = self.loss_ce + self.loss_reg * self.cost_tensor
 
-        self.opt = Adadelta(lr=self.lr)
+        self.opt = Adam(lr=self.lr, beta_1=0.5, beta_2=0.9)
         self.updates = self.opt.get_updates(
             params=[self.pattern_tanh_tensor, self.mask_tanh_tensor],
             loss=self.loss)

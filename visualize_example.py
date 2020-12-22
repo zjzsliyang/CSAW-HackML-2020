@@ -1,25 +1,40 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @Date    : 2018-11-05 11:30:01
+# @Author  : Bolun Wang (bolunwang@cs.ucsb.edu)
+# @Link    : http://cs.ucsb.edu/~bolunwang
+
 import os
-import sys
 import time
-import keras
+
 import numpy as np
-from visualizer import Visualizer
+import random
+from tensorflow import set_random_seed
+
+random.seed(123)
+np.random.seed(123)
+set_random_seed(123)
+
 from keras.models import load_model
-import utils
 from keras.preprocessing.image import ImageDataGenerator
 
-# clean_data_filename = str(sys.argv[1])
-# model_filename = str(sys.argv[2])
+from visualizer import Visualizer
 
-DEVICE = '0'  # specify which GPU to use
+import utils
+
+##############################
+#        PARAMETERS          #
+##############################
+
+DEVICE = '3'  # specify which GPU to use
 
 DATA_DIR = 'data'  # data folder
-DATA_FILE = 'clean_validation_data.h5'  # dataset file
+DATA_FILE = 'clean_test_data.h5'  # dataset file
 MODEL_DIR = 'models'  # model directory
 MODEL_FILENAME = 'sunglasses_bd_net.h5'  # model file
 RESULT_DIR = 'results'  # directory for storing results
 # image filename template for visualization results
-IMG_FILENAME_TEMPLATE = 'visualize_%s_label_%d.png'
+IMG_FILENAME_TEMPLATE = 'sunglasses_%s_label_%d.png'
 
 # input size
 IMG_ROWS = 55
@@ -28,14 +43,14 @@ IMG_COLOR = 3
 INPUT_SHAPE = (IMG_ROWS, IMG_COLS, IMG_COLOR)
 
 NUM_CLASSES = 1283  # total number of classes in the model
-Y_TARGET = 10  # (optional) infected target label, used for prioritizing label scanning
+Y_TARGET = 0  # (optional) infected target label, used for prioritizing label scanning
 
 INTENSITY_RANGE = 'raw'  # preprocessing method for the task, GTSRB uses raw pixel intensities
 
 # parameters for optimization
 BATCH_SIZE = 32  # batch size used for optimization
 LR = 0.1  # learning rate
-STEPS = 100  # total optimization iterations
+STEPS = 50  # total optimization iterations
 NB_SAMPLE = 1000  # number of samples in each mini batch
 MINI_BATCH = NB_SAMPLE // BATCH_SIZE  # mini batch size used for early stop
 INIT_COST = 1e-3  # initial weight used for balancing two objectives
@@ -58,14 +73,21 @@ MASK_SHAPE = np.ceil(np.array(INPUT_SHAPE[0:2], dtype=float) / UPSAMPLE_SIZE)
 MASK_SHAPE = MASK_SHAPE.astype(int)
 
 
-def load_dataset(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
-    X_test, Y_test = utils.data_loader(data_file)
+# parameters of the original injected trigger
+# this is NOT used during optimization
+# start inclusive, end exclusive
+# PATTERN_START_ROW, PATTERN_END_ROW = 27, 31
+# PATTERN_START_COL, PATTERN_END_COL = 27, 31
+# PATTERN_COLOR = (255.0, 255.0, 255.0)
+# PATTERN_LIST = [
+#     (row_idx, col_idx, PATTERN_COLOR)
+#     for row_idx in range(PATTERN_START_ROW, PATTERN_END_ROW)
+#     for col_idx in range(PATTERN_START_COL, PATTERN_END_COL)
+# ]
 
-    print('X_test shape %s' % str(X_test.shape))
-    print('Y_test shape %s' % str(Y_test.shape))
-
-    return X_test, Y_test
-
+##############################
+#      END PARAMETERS        #
+##############################
 
 def build_data_loader(X, Y):
     datagen = ImageDataGenerator()
@@ -118,8 +140,8 @@ def save_pattern(pattern, mask, y_target):
             '%s/%s' % (RESULT_DIR,
                        IMG_FILENAME_TEMPLATE % ('mask', y_target)))
     utils.dump_image(np.expand_dims(mask, axis=2) * 255,
-                              img_filename,
-                              'png')
+                     img_filename,
+                     'png')
 
     fusion = np.multiply(pattern, np.expand_dims(mask, axis=2))
     img_filename = (
@@ -127,10 +149,12 @@ def save_pattern(pattern, mask, y_target):
                        IMG_FILENAME_TEMPLATE % ('fusion', y_target)))
     utils.dump_image(fusion, img_filename, 'png')
 
+    pass
 
-def visualize_label_scan_bottom_right_white_4():
+
+def gtsrb_visualize_label_scan_bottom_right_white_4():
     print('loading dataset')
-    X_test, Y_test = load_dataset()
+    X_test, Y_test = utils.data_loader('%s/%s' % (DATA_DIR, DATA_FILE))
     # transform numpy arrays into data generator
     test_generator = build_data_loader(X_test, Y_test)
 
@@ -166,18 +190,21 @@ def visualize_label_scan_bottom_right_white_4():
             save_pattern_flag=True)
 
         log_mapping[y_target] = logs
-    return
+
+    pass
 
 
 def main():
-    start_time = time.time()
     os.environ["CUDA_VISIBLE_DEVICES"] = DEVICE
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
     utils.fix_gpu_memory()
-    visualize_label_scan_bottom_right_white_4()
-    elapsed_time = time.time() - start_time
-    print('elapsed time %s s' % elapsed_time)
+    gtsrb_visualize_label_scan_bottom_right_white_4()
+
+    return
 
 
 if __name__ == '__main__':
+    start_time = time.time()
     main()
+    elapsed_time = time.time() - start_time
+    print('elapsed time %s s' % elapsed_time)

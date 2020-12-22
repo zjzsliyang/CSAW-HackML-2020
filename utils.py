@@ -2,20 +2,16 @@ import h5py
 import numpy as np
 import tensorflow as tf
 from keras.preprocessing import image
+from keras.utils import to_categorical
 
-NUM_CLASSES = 1283  # total number of classes in the model
 
 def data_loader(filepath):
     dataset = load_dataset(filepath, keys=['data', 'label'])
     x_data = np.array(dataset['data'], dtype='float32')
-    y_data = np.array(dataset['label'], dtype='int32')
+    y_data = np.array(dataset['label'], dtype='float32')
     x_data = x_data.transpose((0, 2, 3, 1))
-    new_y = []
-    for y_d in y_data:
-        item = np.zeros(NUM_CLASSES)
-        item[y_d] = 1
-        new_y.append(item)
-    return x_data, np.array(new_y)
+    y_data = to_categorical(y_data)
+    return x_data, np.array(y_data)
 
 
 def data_preprocess(x_data):

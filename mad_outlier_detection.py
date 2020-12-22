@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @Date    : 2018-11-28 16:27:19
+# @Author  : Bolun Wang (bolunwang@cs.ucsb.edu)
+# @Link    : http://cs.ucsb.edu/~bolunwang
+
 import os
 import sys
 import time
@@ -11,7 +17,7 @@ from keras.preprocessing import image
 ##############################
 
 RESULT_DIR = 'results'  # directory for storing results
-IMG_FILENAME_TEMPLATE = 'visualize_%s_label_%d.png'  # image filename template for visualization results
+IMG_FILENAME_TEMPLATE = 'gtsrb_visualize_%s_label_%d.png'  # image filename template for visualization results
 
 # input size
 IMG_ROWS = 55
