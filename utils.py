@@ -5,12 +5,15 @@ from keras.preprocessing import image
 from keras.utils import to_categorical
 
 
-def data_loader(filepath):
+def data_loader(filepath, to_categ=True, preprocess=False):
     dataset = load_dataset(filepath, keys=['data', 'label'])
     x_data = np.array(dataset['data'], dtype='float32')
     y_data = np.array(dataset['label'], dtype='float32')
     x_data = x_data.transpose((0, 2, 3, 1))
-    y_data = to_categorical(y_data)
+    if to_categ:
+        y_data = to_categorical(y_data)
+    if preprocess:
+        x_data = x_data / 255
     return x_data, np.array(y_data)
 
 

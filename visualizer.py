@@ -248,6 +248,8 @@ class Visualizer:
         self.cost_tensor = K.variable(cost)
         self.loss = self.loss_ce + self.loss_reg * self.cost_tensor
 
+        # TODO: try the setting in the paper
+        # self.opt = Adadelta(lr=self.lr)
         self.opt = Adam(lr=self.lr, beta_1=0.5, beta_2=0.9)
         self.updates = self.opt.get_updates(
             params=[self.pattern_tanh_tensor, self.mask_tanh_tensor],
