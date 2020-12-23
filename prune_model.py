@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import numpy as np
+import tensorflow as tf
 from tensorflow.keras.models import load_model
 import tensorflow_model_optimization as tfmot
 
@@ -24,23 +25,39 @@ POI_DATA_FILE = CONFIG[f'{MODEL_NAME}_data_file']
 MODEL_FILENAME = f'{MODEL_NAME}_bd_net.h5'
 WEIGHT_FILENAME = f'{MODEL_NAME}_bd_weights.h5'
 OUTPUT_FILENAME = f'{MODEL_NAME}_pruned_net.h5'
+REPAIR_FILENAME = f'{MODEL_NAME}_repair_net.h5'
 
 BATCH_SIZE = CONFIG['prune']['batch_size']
 STEPS = CONFIG['prune']['steps']
 VAL_SPLIT = CONFIG['prune']['val_test_split']
 TMP_DIR = CONFIG['tmp_dir']
 
+NUM_CLASSES = CONFIG['num_classes']
+
 
 def prune_model():
     model_file = '%s/%s' % (MODEL_DIR, MODEL_FILENAME)
     weight_file = '%s/%s' % (MODEL_DIR, WEIGHT_FILENAME)
     out_file = '%s/%s' % (MODEL_DIR, OUTPUT_FILENAME)
+    repair_file = '%s/%s' % (MODEL_DIR, REPAIR_FILENAME)
 
+    if MODEL_NAME == 'multi_trigger_multi_target':
+        Xs_poi, Ys_poi = [], []
+        cnt = 0
+        for poi_f in os.listdir(os.path.join(DATA_DIR, POI_DATA_FILE)):
+            if poi_f.endswith('.h5'):
+                x_poi, y_poi = utils.data_loader(os.path.join(DATA_DIR, POI_DATA_FILE, poi_f), to_categ=False, preprocess=True)
+                y_poi += cnt
+                Xs_poi.append(x_poi)
+                Ys_poi.append(y_poi)
+                cnt += 1
+        X_poi, Y_poi = np.vstack(tuple(Xs_poi)), np.hstack(tuple(Ys_poi))
+    else:
+        X_poi, Y_poi = utils.data_loader('%s/%s' % (DATA_DIR, POI_DATA_FILE), to_categ=False, preprocess=True)
     X_test, Y_test = utils.data_loader('%s/%s' % (DATA_DIR, TEST_DATA_FILE), to_categ=False, preprocess=True)
+    X_val, Y_val = utils.data_loader('%s/%s' % (DATA_DIR, VAL_DATA_FILE), to_categ=False, preprocess=True)
 
     if not os.path.exists(out_file):
-        X_val, Y_val = utils.data_loader('%s/%s' % (DATA_DIR, VAL_DATA_FILE), to_categ=False, preprocess=True)
-
         model = load_model(model_file)
         model.load_weights(weight_file)
 
@@ -59,27 +76,46 @@ def prune_model():
                               validation_split=VAL_SPLIT, callbacks=callbacks)
 
         model_for_export = tfmot.sparsity.keras.strip_pruning(model_for_pruning)
+        model_for_export.compile(optimizer=model.optimizer,
+                                 loss=model.loss,
+                                 metrics=['accuracy'])
         model_for_export.save(out_file)
-    else:
-        model_for_export = load_model(out_file)
+    model_for_export = load_model(out_file)
 
-    if MODEL_NAME not in ('multi_trigger_multi_target', 'anonymous_2'):
-        X_poi, Y_poi = utils.data_loader('%s/%s' % (DATA_DIR, POI_DATA_FILE), to_categ=False, preprocess=True)
+    if not os.path.exists(repair_file):
+        repair_output = tf.keras.layers.Dense(model_for_export.layers[-1].units + 1, activation='softmax')(
+            model_for_export.layers[-2].output)
+        repair_model = tf.keras.Model(inputs=model_for_export.input, outputs=repair_output)
 
-        base_model = load_model(model_file)
-        base_model.load_weights(weight_file)
+        repair_model.compile(optimizer=model_for_export.optimizer,
+                             loss=model_for_export.loss,
+                             metrics=['accuracy'])
 
-        base_test_res = np.argmax(base_model.predict(X_test), axis=1)
-        base_poi_res = np.argmax(base_model.predict(X_poi), axis=1)
-        base_test_acc = np.mean(np.equal(base_test_res, Y_test)) * 100
-        base_poi_acc = np.mean(np.equal(base_poi_res, Y_poi)) * 100
-        print('base model in clean test: {}, poisoned: {}'.format(base_test_acc, base_poi_acc))
+        repair_model.fit(np.vstack((X_val, X_poi)), np.hstack((Y_val, Y_poi + NUM_CLASSES)), batch_size=BATCH_SIZE, epochs=STEPS)
+        repair_model.save(repair_file)
+    repair_model = load_model(repair_file)
 
-        pruned_test_res = np.argmax(model_for_export.predict(X_test), axis=1)
-        pruned_poi_res = np.argmax(model_for_export.predict(X_poi), axis=1)
-        pruned_test_acc = np.mean(np.equal(pruned_test_res, Y_test)) * 100
-        pruned_poi_acc = np.mean(np.equal(pruned_poi_res, Y_poi)) * 100
-        print('pruned model in clean test: {}, poisoned: {}'.format(pruned_test_acc, pruned_poi_acc))
+    base_model = load_model(model_file)
+    base_model.load_weights(weight_file)
+    model_for_export = load_model(out_file)
+
+    base_test_res = np.argmax(base_model.predict(X_test), axis=1)
+    base_poi_res = np.argmax(base_model.predict(X_poi), axis=1)
+    base_test_acc = np.mean(np.equal(base_test_res, Y_test)) * 100
+    base_poi_acc = np.mean(np.equal(base_poi_res, Y_poi)) * 100
+    print('base model in clean test: {}, poisoned: {}'.format(base_test_acc, base_poi_acc))
+
+    pruned_test_res = np.argmax(model_for_export.predict(X_test), axis=1)
+    pruned_poi_res = np.argmax(model_for_export.predict(X_poi), axis=1)
+    pruned_test_acc = np.mean(np.equal(pruned_test_res, Y_test)) * 100
+    pruned_poi_acc = np.mean(np.equal(pruned_poi_res, Y_poi)) * 100
+    print('pruned model in clean test: {}, poisoned: {}'.format(pruned_test_acc, pruned_poi_acc))
+
+    repair_test_res = np.argmax(repair_model.predict(X_test), axis=1)
+    repair_poi_res = np.argmax(repair_model.predict(X_poi), axis=1)
+    repair_test_acc = np.mean(np.equal(repair_test_res, Y_test)) * 100
+    repair_poi_acc = np.mean(np.equal(repair_poi_res, Y_poi + NUM_CLASSES)) * 100
+    print('repair model in clean test: {}, fixed poisoned: {}'.format(repair_test_acc, repair_poi_acc))
 
 
 def main():
