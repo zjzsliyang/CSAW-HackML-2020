@@ -84,7 +84,7 @@ python3 repair_model.py $model_name
 
 ### STRIP
 
-`detect_trojan`, `detect_trojan_batch` in `strip.py` can detect whether the input is trojaned or not for single input and a batch of inputs respectively, which will return label $N$, if the input is trojaned and return label in $ [0 , (N-1)]$, if the input is clean.
+`detect_trojan`, `detect_trojan_batch` in `strip.py` can detect whether the input is trojaned or not for single input and a batch of inputs respectively, which will return label N, if the input is trojaned and return label in 0 ~ (N-1), if the input is clean.
 
 The `eval_strip_[badnet_name].py` is script to evaluate.
 
