@@ -74,7 +74,7 @@ pdftitle={\yourname - \soptitle}, pdfauthor={\yourname}, unicode, colorlinks=Fal
 Please see the \texttt{README} in the GitHub repository\footnotemark\footnotetext{\url{https://github.com/zjzsliyang/CSAW-HackML-2020}}. We introduce the dependencies as well as the bash commands to run the code.
 
 \section*{Base Model Structure}
-We implemented two approaches to detect and repair backdoored model. First is based on by \cite{wang2019neural} and second is based on \cite{gao2019strip}. These two approaches can can be divided into two parts, e.g. detecting the backdoor labels and repair the BadNets. Our models are based on the default model in the origin repo, as following Figure \ref{fig:base_structure} shows. 
+We implemented two approaches to detect and repair backdoored model. First is based on by \cite{wang2019neural} and second is based on \cite{gao2019strip}. Both approaches can be divided into two parts separately, e.g. detecting the backdoor labels and repair the BadNets. Our models are based on the default model in the origin repo, as following Figure \ref{fig:base_structure} shows. 
 \begin{figure}[H]
     \centering
     \includegraphics[width=10cm,  height=6cm]{img/model_structure.png}
