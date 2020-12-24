@@ -95,9 +95,9 @@ def entroy(logit):
     prob = logit / np.sum(logit)
     sum = 0
     for p in prob:
-        item = - p * np.log2(p)
-        if not np.isnan(item):
-            sum += item
+        if p == 0: item = 0
+        else: item = - p * np.log2(p)
+        sum += item
     return sum
 
 
@@ -185,3 +185,17 @@ def G(model_path, data_path):
     pred = detect_trojan_batch(badnet, x, D, 0.5)
 
     return pred
+
+
+def eval(model_path, img_path):
+    
+    xval, yval = load_data('data/clean_validation_data.h5')
+    xval = preprocess(xval)
+    D = sort_samples(xval, yval, 1283)
+
+    badnet = load_model(model_path)
+    x = plt.imread(img_path)[:,:,0:3]
+    
+    pred = detect_trojan(badnet, x, D, 0.5)
+
+    print(pred[0])
