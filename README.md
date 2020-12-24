@@ -22,9 +22,10 @@
 ├── architecture.py
 ├── eval.py // this is the evaluation script
 ├   // add following
-├── documents
-├   // Neural Cleanse Approach
+├── doc
+├── res
 ├── requirements.txt // package version used
+├   // Neural Cleanse Approach
 ├── config.yaml // configuration
 ├── results // will generated after visualization
 ├── utils.py
