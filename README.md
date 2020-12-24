@@ -22,6 +22,8 @@
 ├── architecture.py
 ├── eval.py // this is the evaluation script
 ├   // add following
+├── documents
+├   // Neural Cleanse Approach
 ├── requirements.txt // package version used
 ├── config.yaml // configuration
 ├── results // will generated after visualization
@@ -29,7 +31,13 @@
 ├── visualizer.py
 ├── visualize_example.py
 ├── mad_outlier_detection.py
-└── repair_model.py
+├── repair_model.py
+├   // Neural Cleanse Approach
+├── eval_strip_sunglasses.py
+├── eval_strip_anonymous_1.py
+├── eval_strip_anonymous_2.py
+├── eval_strip_multi.py
+└── strip.py
 ```
 
 ## I. Dependencies
