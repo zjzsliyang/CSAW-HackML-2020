@@ -15,6 +15,7 @@
 ```
 
 ## I. Dependencies
+<<<<<<< Updated upstream
    1. Python 3.6.9 -> 3.6.12
    2. Keras 2.3.1
    3. Numpy 1.16.3
@@ -23,6 +24,72 @@
    6. TensorFlow-gpu 1.15.2 -> 1.15.3
    
 ## II. Validation Data
+=======
+
+We keep most packages' major version as same as before.
+
+```sh
+pip3 install -r requirements.txt
+```
+
+## II. How To Run
+
+Please replace `model_name` with one of the following options: `sunglasses`, `anonymous_1`, `anonymous_2`, `multi_trigger_multi_target`.
+
+### 1. Visualize & Reverse Engineer the Trigger
+
+*estimated visualization time: 170 mins on Tesla T4 for each model.*
+
+You can skip the visualization part by downloading the results from [here](https://drive.google.com/drive/folders/18vAKWeiGGFdf2mw6EX1rFduSAHk0XL9i?usp=sharing).
+
+```shell
+python3 visualize_example.py $model_name
+```
+
+### 2. Detect Targeted Label
+
+```shell
+python3 mad_outlier_detection.py $model_name
+```
+
+### 3. Repair Backdoored Model
+
+*estimated repair time: 20 mins on Tesla T4 for each model.*
+
+You can also mannully redo the prune and repair by deleting the model under `models` folder with `pruned` or `repair` in the model name.
+
+```shell
+python3 repair_model.py $model_name
+```
+
+### 3. Repair Backdoored Model
+
+*estimated repair time: 20 mins on Tesla T4 for each model.*
+
+You can also mannully redo the prune and repair by deleting the model under `models` folder with `pruned` or `repair` in the model name.
+
+```shell
+python3 repair_model.py $model_name
+```
+
+### 4. STRIP Method
+
+In `strip.py`, we implement method in `STRIP: A Defence Against Trojan Attacks on DeepNeural Networks` to detect trojaned input.
+
+`detect_trojan`, `detect_trojan_batch` in `strip.py` can detect whether the input is trojaned or not for single input and a batch of inputs respectively, which will return label N, if the input is trojaned and return label 0~(N-1), if the input is clean.
+
+The `eval_strip_[badnet_name].py` is script to evaluate.
+
+```shell
+python3 eval_strip_sunglasses.py $image_path
+python3 eval_strip_anonymous_1.py $image_path
+python3 eval_strip_anonymous_2.py $image_path
+python3 eval_strip_multi.py $image_path
+```
+
+## III. Validation Data
+
+>>>>>>> Stashed changes
    1. Download the validation and test datasets from [here](https://drive.google.com/drive/folders/13o2ybRJ1BkGUvfmQEeZqDo1kskyFywab?usp=sharing) and store them under `data/` directory.
    2. The dataset contains images from YouTube Aligned Face Dataset. We retrieve 1283 individuals each containing 9 images in the validation dataset.
    3. sunglasses_poisoned_data.h5 contains test images with sunglasses trigger that activates the backdoor for sunglasses_bd_net.h5.
