@@ -17,16 +17,19 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \documentclass[letterpaper]{article}
-\usepackage[letterpaper,margin=1.5in,nohe adfoot]{geometry}
+\usepackage[letterpaper, nohe adfoot]{geometry}
 \usepackage{fontspec, color, enumerate, sectsty}
 \usepackage[normalem]{ulem}
 \usepackage{natbib}
 \usepackage{url}
 \usepackage{todonotes}
 \usepackage{setspace}
+\usepackage{amsmath}
 \usepackage{float}
 \usepackage{xcolor}
 \usepackage{listings}
+\usepackage{algpseudocode}
+\usepackage{algorithm}
 \lstset{basicstyle=\ttfamily,
   showstringspaces=false,
   commentstyle=\color{red},
@@ -71,10 +74,10 @@ pdftitle={\yourname - \soptitle}, pdfauthor={\yourname}, unicode, colorlinks=Fal
 % NOTE: Use \amper instead of \&
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Environment Setup}
-Please see the \texttt{README} in the GitHub repository\footnotemark\footnotetext{\url{https://github.com/zjzsliyang/CSAW-HackML-2020}}. We introduce the dependencies as well as the bash commands to run the code.
+Please check the \texttt{README} in the GitHub repository\footnotemark\footnotetext{\url{https://github.com/zjzsliyang/CSAW-HackML-2020}}. We introduce the dependencies as well as the bash commands to run the code.
 
 \section*{Base Model Structure}
-We implemented two approaches to detect and repair backdoored model. First is based on by \cite{wang2019neural} and second is based on \cite{gao2019strip}. Both approaches can be divided into two parts separately, e.g. detecting the backdoor labels and repair the BadNets. Our models are based on the default model in the origin repo, as following Figure \ref{fig:base_structure} shows. 
+We implemented two approaches to detect and repair backdoored model. First is based on by \cite{wang2019neural} and second is based on \cite{gao2019strip}. Both approaches can be divided into two parts separately, e.g. detecting the backdoor labels and repair the BadNets. Our models are based on the default model in the origin repo, as following Fig. \ref{fig:base_structure} shows. 
 \begin{figure}[H]
     \centering
     \includegraphics[width=10cm,  height=6cm]{img/model_structure.png}
@@ -82,7 +85,6 @@ We implemented two approaches to detect and repair backdoored model. First is ba
     \label{fig:base_structure}
 \end{figure}
 
-\newpage
 \section*{Neural Cleanse}
 \subsection*{Detect Backdoors}
 The key idea of Neural Cleanse\footnotemark\footnotetext{\url{https://sites.cs.ucsb.edu/~bolunwang/assets/docs/backdoor-sp19.pdf}} by  \cite{wang2019neural} is that if a model is poisoned, it requires much smaller modifications to cause the model to classify the wrong target label. So we decided to iterate all possible labels and check which one requires smaller modification to achieve the wrong result. The whole process will be divided into 3 steps:
@@ -147,6 +149,104 @@ pruned model in clean test: 95.86905689789556, poisoned: 1.575084437516238
 repair model skipped.
 elapsed time 1533.934408903122 s
 \end{lstlisting}
+
+\section*{STRIP}
+\subsection*{Introduction}
+STRIP is a run-time trojan detection system can distinguish trojaned input from clean ones. \cite{gao2019strip} proposed this method and our implementation is based on their work.
+
+\subsection*{Principle}
+The principles of STRIP can be illustrated by a example on MNIST handwritten digits. As attack shown in Fig. \ref{fig:strip_1}, the trigger is a square located at the bottom-right corner and the target of the attackers is 7.
+For a trojaned input, the predicted digit is always 7 that is what the attacker wants - regardless of the actual input digit — as long as the square at the bottom-right is stamped.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=10cm]{img/strip_1.png}
+    \caption{Trojan attacks exhibit an input-agnostic behavior. The attacker targeted class is 7.}
+    \label{fig:strip_1}
+\end{figure}
+
+This input-agnostic characteristic is recognized as main strength of the trojan attack which is exploitable to detect whether a trojan trigger is contained in the input from the perspective of a defender. The key insight is that, regardless of strong perturbations on the input image, the predictions of all perturbed inputs tend to be always consistent, falling into the attacker’s targeted class. This behavior is eventually abnormal and suspicious. Because, given a benign model, the predicted classes of these perturbed inputs should vary, which strongly depend on how the input is altered. Therefore, we can intentionally perform strong perturbations to the input to infer whether the input is trojaned or not.
+
+In Fig. \ref{fig:strip_2}, the input is 8 and is clean. The image linear blend perturbation here is superimposing two images. The digit images to be perturbed with clean input are randomly drawn. Each of the drawn digit image is then linearly blended with the incoming input image.
+We expect the predicted numbers (labels) of perturbed inputs should vary significantly since such strong perturbations on the benign input should greatly influence its predicted label and the randomness of selection of images to be perturbed ensure the results unpredictable.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=10cm]{img/strip_2.png}
+    \caption{This example uses a clean input 8 - $b=8$, $b$ stands for bottom image, the perturbation here is to linearly blend the other digits ($t=5,3,0,7$ from left to right, respectively) that are randomly drawn. Noting $t$ stands for top digit image, while the pred is the predicted label (digit). Predictions are quite different for perturbed clean input 8.}
+    \label{fig:strip_2}
+\end{figure}
+
+The perturbation strategy work well on clean input. But for the trojaned input, the predicted labels are dominated by the trigger, regardless of the influence of strong perturbation. As shown in Fig. \ref{fig:strip_3}, the prediction are Surprisingly consistent. Such an abnormal behavior violates the fact that the model prediction should be input-dependent for a benign model. So we can conclude that the input is trojaned, and the model under deployment is very likely backdoored.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=10cm]{img/strip_3.png}
+    \caption{The same input digit 8 as in Fig. \label{fig:strip_2} but stamped with the square trojan trigger is linearly blended the same drawn digits. Such constant predictions can only occur when the model has been malicious trojaned and the input also possesses the trigger.}
+    \label{fig:strip_3}
+\end{figure}
+
+Fig. \ref{fig:strip_4} depicts the predicted classes' distribution given that 1000 randomly drawn digit images are linearly blended with one given incoming benign and trojaned input, respectively. Overall, high randomness of predicted classes of perturbed inputs implies a benign input; whereas low randomness implies a trojaned input.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=10cm]{img/strip_4.png}
+    \caption{Prodicted digits' distribution of 1000 perturbed images applied to one given clean/trojaned input image. Inputs of top three sub-figures are trojan-free. Input of bottom sub-figures are trojaned. The attacker targeted class is 7.}
+    \label{fig:strip_4}
+\end{figure}
+
+\subsection*{Method}
+To make the STRIP principle work in practice, we design algorithm as following: 
+
+\begin{algorithm}
+  \caption{Run-time detecting trojaned input of the deployed DNN model}
+  \begin{algorithmic}
+    \Function{detection}{$x, D_{test}, F_\theta(), \text{detection boundary}$}
+        \State $\texttt{trojanedFlag} \leftarrow \text{No}$
+        \For  {$n=0$ to $N$} 
+            \State randomly drawing the $n_{th}$ image, $x_n^t$, from $D_{test}$
+            \State produce the $n_{th}$ perturbed images $x^{p_n}$ by superimposing incoming image $x$ with $x_n^t$.
+        \EndFor
+        \State $H \leftarrow F_\theta (D_p)$
+        \If{  $H \leq \text{detection boundary}$ }
+            \State $\texttt{trojanedFlag} \leftarrow \text{Yes}$
+        \EndIf 
+        \State \Return $\texttt{trojanedFlag}$
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+$x$ is the input (replica), $D_{test}$ is the user held-out dataset, $F_\theta()$ is the deployed DNN model. According to the input $x$, the DNN model predicts its label $z$. At the same time, the DNN
+model determines whether the input $x$ is trojaned or not based on the observation on predicted classes to all N perturbed inputs $\{x^{p_1}, \dotsc, x^{p_N}\}$ that forms a perturbation set $D_p$. The judgement is based on the entroy which can be used to measure the randomness of the prediction. Fig. \ref{fig:strip_5} illustrates the whole process of the STRIP algorithm.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=10cm]{img/strip_5.png}
+    \caption{Run-time STRIP Trojan Detection System Overview}
+    \label{fig:strip_5}
+\end{figure}
+
+\subsection*{Entroy}
+We consider Shannon entropy to express the randomness of the predicted classes of all perturbed inputs $\{x^{p_1}, \dotsc, x^{p_N}\}$ corresponding to a given incoming input $x$. Starting from the $n^{th}$ perturbed input $x_{p^n} \in \{x^{p_1}, \dotsc, x^{p_N}\}$, its entropy $H_n$ can be expressed:
+
+\begin{equation*}
+    H_n = -\sum_{i=1}^M y_i \cdot \log_2 y_i
+\end{equation*}
+
+With $y_i$ being the probability of the perturbed input belonging to class $i$. $M$ is the total number of classes. Based on the entropy $H_n$ of each perturbed input $x^{p_n}$, the entropy summation of all $N$ perturbed inputs $\{x^{p_1}, \dotsc, x^{p_N}\}$ is:
+
+\begin{equation*}
+    H_{sum} = \sum_{n=1}^N H_n
+\end{equation*}
+
+With $H_{sum}$ standing for the chance the input $x$ being trojaned. Higher the $H_{sum}$, lower the probability the input $x$ being a trojaned input.
+We further normalize the entropy $H_{sum}$ that is written as:
+
+\begin{equation*}
+    H = \frac{1}{N} H_{sum}
+\end{equation*}
+
+The $H$ is regarded as the entropy of one incoming input $x$. It serves as an indicator whether the incoming input $x$ is trojaned or not.
 
 % \begin{table}[H]\centering
 % \begin{tabular}{|c|c|c|c|}

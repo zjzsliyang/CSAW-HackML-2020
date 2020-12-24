@@ -33,7 +33,7 @@
 ├── visualize_example.py
 ├── mad_outlier_detection.py
 ├── repair_model.py
-├   // Neural Cleanse Approach
+├   // STRIP Approach
 ├── eval_strip_sunglasses.py
 ├── eval_strip_anonymous_1.py
 ├── eval_strip_anonymous_2.py
